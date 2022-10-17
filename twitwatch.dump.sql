@@ -18,10 +18,11 @@ CREATE TABLE IF NOT EXISTS `hashtags` (
   `hashtag` varchar(64) COLLATE armscii8_bin NOT NULL,
   `lang` varchar(2) COLLATE armscii8_bin NOT NULL DEFAULT 'en',
   `ring` int(11) NOT NULL DEFAULT 1,
+  `category` varchar(50) COLLATE armscii8_bin DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `FK_hashtags_rings` (`ring`),
   CONSTRAINT `FK_hashtags_rings` FOREIGN KEY (`ring`) REFERENCES `rings` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=armscii8 COLLATE=armscii8_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=armscii8 COLLATE=armscii8_bin;
 
 -- Data exporting was unselected.
 
@@ -54,7 +55,7 @@ CREATE TABLE IF NOT EXISTS `tweets` (
   KEY `FK_tweets_users` (`author_id`),
   CONSTRAINT `FK_tweets_hashtags` FOREIGN KEY (`hashtag`) REFERENCES `hashtags` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `FK_tweets_users` FOREIGN KEY (`author_id`) REFERENCES `users` (`twit_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=135 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=1192 DEFAULT CHARSET=utf8mb4;
 
 -- Data exporting was unselected.
 
