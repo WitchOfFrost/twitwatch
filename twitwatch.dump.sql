@@ -60,8 +60,7 @@ CREATE TABLE IF NOT EXISTS `tweets` (
 
 -- Dumping structure for table twitwatch.users
 CREATE TABLE IF NOT EXISTS `users` (
-  `id` int(64) NOT NULL AUTO_INCREMENT,
-  `twit_id` varchar(128) DEFAULT NULL,
+  `twit_id` varchar(128) NOT NULL,
   `username` varchar(128) DEFAULT NULL,
   `name` varchar(128) DEFAULT NULL,
   `follower_count` int(11) DEFAULT NULL,
@@ -69,9 +68,9 @@ CREATE TABLE IF NOT EXISTS `users` (
   `tweet_count` int(11) DEFAULT NULL,
   `created_at` datetime DEFAULT NULL,
   `location` varchar(128) DEFAULT NULL,
-  PRIMARY KEY (`id`),
+  PRIMARY KEY (`twit_id`) USING BTREE,
   UNIQUE KEY `twit_id` (`twit_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=338 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Data exporting was unselected.
 
