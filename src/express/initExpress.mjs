@@ -22,5 +22,7 @@ export default class {
 
     res.status(200);
     res.json(randomObj[0]);
+
+    conn.end();
   }
 }
