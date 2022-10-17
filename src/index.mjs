@@ -13,6 +13,7 @@ process.chdir(__dirname);
 import * as fs from "node:fs/promises";
 import * as mariadb from "mariadb";
 import initRing from "./ring/initRing.mjs";
+import initExpress from "./express/initExpress.mjs";
 
 // Load Config
 
@@ -52,6 +53,14 @@ ringsToCreate.forEach((ring) => {
 });
 
 conn.close();
+
+// Init Express
+
+if (config.express.enabled === true) {
+  new initExpress();
+}
+
+// Init DB Logging
 
 setInterval(async () => {
   const conn = await pool.getConnection();
