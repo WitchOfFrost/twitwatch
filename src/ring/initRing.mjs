@@ -114,9 +114,13 @@ export default class {
   async fetchResult(req, maxHashtagId) {
     const conn = await global.pool.getConnection();
 
-    req.url = req.url.replace("$HASHTAG$", this.currHashtag.hashtag);
-    req.url = req.url.replace("$SINCEID$", maxHashtagId);
-    req.url = req.url.replace("$LANG$", this.currHashtag.lang)
+    [
+      { name: "$HASHTAG$", value: this.currHashtag.hashtag },
+      { name: "$SINCEID$", value: maxHashtagId },
+      { name: "$LANG$", value: this.currHashtag.lang },
+    ].forEach((entry) => {
+      req.url = req.url.replace(entry.name, entry.value);
+    });
 
     axios(req)
       .then((res) => {
@@ -181,7 +185,13 @@ export default class {
 
         await conn.query(
           `INSERT IGNORE INTO tweets SET twit_id = ?, author_id = ?, text = ?, hashtag = ?, created_at = ?`,
-          [tweet.id, tweet.author_id, tweet.text, this.currHashtag.id, tweet.created_at]
+          [
+            tweet.id,
+            tweet.author_id,
+            tweet.text,
+            this.currHashtag.id,
+            tweet.created_at,
+          ]
         );
 
         conn.end();
