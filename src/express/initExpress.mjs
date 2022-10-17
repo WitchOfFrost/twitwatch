@@ -1,8 +1,10 @@
 import express from "express";
+import morgan from "morgan";
 
 export default class {
   constructor() {
     this.api = express();
+    this.api.use(morgan("tiny"));
 
     this.api.get("/v1/getRandomTrash", (req, res) => {
       this.getRandomTrash(req, res);
@@ -16,12 +18,39 @@ export default class {
   async getRandomTrash(req, res) {
     const conn = await global.pool.getConnection();
 
-    let randomObj = await conn.query(
-      "SELECT id, text FROM tweets ORDER BY RAND() LIMIT 1"
-    );
+    let randomObj = {};
 
-    res.status(200);
-    res.json(randomObj[0]);
+    if (req.query.id === undefined) {
+      randomObj = await conn.query(
+        "SELECT id, text FROM tweets ORDER BY RAND() LIMIT 1"
+      );
+
+      randomObj[0].permalink =
+        global.config.express.baseURL +
+        "/v1/getRandomTrash?id=" +
+        randomObj[0].id;
+
+      res.status(200);
+      res.json({ code: 200, data: randomObj[0] });
+    } else {
+      randomObj = await conn.query(
+        "SELECT id, text FROM tweets WHERE id = ? LIMIT 1",
+        [req.query.id]
+      );
+
+      if (randomObj[0] === undefined || randomObj[0] === null) {
+        res.status(404);
+        res.json({ code: 404, data: "Not found." });
+      } else {
+        randomObj[0].permalink =
+          global.config.express.baseURL +
+          "/v1/getRandomTrash?id=" +
+          req.query.id;
+
+        res.status(200);
+        res.json({ code: 200, data: randomObj[0] });
+      }
+    }
 
     conn.end();
   }
