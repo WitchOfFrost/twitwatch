@@ -18,32 +18,30 @@ export default class {
   async getRandomTrash(req, res) {
     const conn = await global.pool.getConnection();
 
-    let randomObj = {};
+    let randomObj = [];
+
+    if (
+      isNaN(req.query.limit) ||
+      req.query.limit === undefined ||
+      req.query.limit === null
+    ) {
+      req.query.limit = 1;
+    } else if (req.query.limit > 50) {
+      res.status(400);
+      res.json({
+        code: 400,
+        data: "You cannot return more than 50 Datasets at once!",
+      });
+      return;
+    }
 
     if (req.query.id === undefined) {
       randomObj = await conn.query(
-        "SELECT id, text FROM tweets ORDER BY RAND() LIMIT 1"
+        "SELECT id, text FROM tweets ORDER BY RAND() LIMIT ?",
+        [Number(req.query.limit)]
       );
 
-      randomObj[0].text = randomObj[0].text.replace(
-        /(http)[s]{1}(:\/\/t\.co\/)[a-zA-Z0-9]*/gi,
-        ""
-      );
-
-      randomObj[0].permalink =
-        global.config.express.baseURL +
-        "/v1/getRandomTrash?id=" +
-        randomObj[0].id;
-
-      randomObj[0].share =
-        "https://twitter.com/intent/tweet?text=" +
-        encodeURI(
-          "Schau dir diesen coolen zufälligen Tweet vom Deutschen Trash-TV Twitter an!\n\n"
-        ) +
-        randomObj[0].permalink;
-
-      res.status(200);
-      res.json({ code: 200, data: randomObj[0] });
+      genAndSend(randomObj);
     } else {
       randomObj = await conn.query(
         "SELECT id, text FROM tweets WHERE id = ? LIMIT 1",
@@ -54,26 +52,36 @@ export default class {
         res.status(404);
         res.json({ code: 404, data: "Not found." });
       } else {
-        randomObj[0].text = randomObj[0].text.replace(
+        genAndSend(randomObj);
+      }
+    }
+
+    function genAndSend(randomObj) {
+      let results = [];
+
+      randomObj.forEach((result) => {
+        result.text = result.text.replace(
           /(http)[s]{1}(:\/\/t\.co\/)[a-zA-Z0-9]*/gi,
           ""
         );
 
-        randomObj[0].permalink =
-          global.config.express.baseURL +
-          "/v1/getRandomTrash?id=" +
-          req.query.id;
+        result.permalink =
+          global.config.express.baseURL + "/v1/getRandomTrash?id=" + result.id;
 
-        randomObj[0].share =
+        result.share =
           "https://twitter.com/intent/tweet?text=" +
           encodeURI(
             "Schau dir diesen coolen zufälligen Tweet vom Deutschen Trash-TV Twitter an!\n\n"
           ) +
-          randomObj[0].permalink;
+          result.permalink;
 
-        res.status(200);
-        res.json({ code: 200, data: randomObj[0] });
-      }
+        results.push(result);
+
+        if (results.length === Number(req.query.limit)) {
+          res.status(200);
+          res.json({ code: 200, data: results });
+        }
+      });
     }
 
     conn.end();
