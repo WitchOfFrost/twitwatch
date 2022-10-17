@@ -25,10 +25,22 @@ export default class {
         "SELECT id, text FROM tweets ORDER BY RAND() LIMIT 1"
       );
 
+      randomObj[0].text = randomObj[0].text.replace(
+        /(http)[s]{1}(:\/\/t\.co\/)[a-zA-Z0-9]*/gi,
+        ""
+      );
+
       randomObj[0].permalink =
         global.config.express.baseURL +
         "/v1/getRandomTrash?id=" +
         randomObj[0].id;
+
+      randomObj[0].share =
+        "https://twitter.com/intent/tweet?text=" +
+        encodeURI(
+          "Schau dir diesen coolen zufälligen Tweet vom Deutschen Trash-TV Twitter an!\n\n"
+        ) +
+        randomObj[0].permalink;
 
       res.status(200);
       res.json({ code: 200, data: randomObj[0] });
@@ -42,10 +54,22 @@ export default class {
         res.status(404);
         res.json({ code: 404, data: "Not found." });
       } else {
+        randomObj[0].text = randomObj[0].text.replace(
+          /(http)[s]{1}(:\/\/t\.co\/)[a-zA-Z0-9]*/gi,
+          ""
+        );
+
         randomObj[0].permalink =
           global.config.express.baseURL +
           "/v1/getRandomTrash?id=" +
           req.query.id;
+
+        randomObj[0].share =
+          "https://twitter.com/intent/tweet?text=" +
+          encodeURI(
+            "Schau dir diesen coolen zufälligen Tweet vom Deutschen Trash-TV Twitter an!\n\n"
+          ) +
+          randomObj[0].permalink;
 
         res.status(200);
         res.json({ code: 200, data: randomObj[0] });
