@@ -49,7 +49,14 @@ export default class {
 
     delete dbRes.meta;
 
-    this.hashtags = dbRes;
+    if (this.hashtags === undefined) {
+      this.hashtags = [];
+    }
+
+    dbRes.forEach((hashtag) => {
+      const found = this.hashtags.some((el) => el.id === hashtag.id);
+      if (!found) this.hashtags.push(hashtag);
+    });
 
     conn.end();
 
@@ -59,7 +66,8 @@ export default class {
         "]" +
         "\nNext refresh due in " +
         this.refresh_hashtags +
-        " Seconds!"
+        " Seconds! \nDATA: " +
+        JSON.stringify(this.hashtags)
     );
   }
 
@@ -90,6 +98,7 @@ export default class {
         const conn = await global.pool.getConnection();
 
         this.currHashtag = this.hashtags.shift();
+        this.hashtags.push(this.currHashtag);
 
         let req = Object.assign({}, this.axios);
 
@@ -124,8 +133,6 @@ export default class {
 
     axios(req)
       .then((res) => {
-        this.hashtags.push(this.currHashtag);
-
         this.createLoop();
         this.processResult(res);
 
