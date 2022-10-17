@@ -16,7 +16,8 @@ USE `twitwatch`;
 CREATE TABLE IF NOT EXISTS `hashtags` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `hashtag` varchar(64) COLLATE armscii8_bin NOT NULL,
-  `ring` int(11) DEFAULT NULL,
+  `lang` varchar(2) COLLATE armscii8_bin NOT NULL DEFAULT 'en',
+  `ring` int(11) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`),
   KEY `FK_hashtags_rings` (`ring`),
   CONSTRAINT `FK_hashtags_rings` FOREIGN KEY (`ring`) REFERENCES `rings` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION

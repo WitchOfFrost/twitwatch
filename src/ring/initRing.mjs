@@ -19,7 +19,7 @@ export default class {
     this.axios = {
       url:
         global.config.twitter.baseURL +
-        "tweets/search/recent?query=%23$$$ -is:retweet lang:de&max_results=100&expansions=author_id&user.fields=created_at,description,entities,id,location,name,pinned_tweet_id,profile_image_url,protected,public_metrics,url,username,verified,withheld&sort_order=recency&tweet.fields=created_at&since_id=%%%",
+        "tweets/search/recent?query=%23$HASHTAG$ -is:retweet lang:$LANG$&max_results=100&expansions=author_id&user.fields=created_at,description,entities,id,location,name,pinned_tweet_id,profile_image_url,protected,public_metrics,url,username,verified,withheld&sort_order=recency&tweet.fields=created_at&since_id=$SINCEID$",
       method: "get",
       headers: {
         Authorization: "Bearer " + global.config.twitter.bearer,
@@ -114,8 +114,9 @@ export default class {
   async fetchResult(req, maxHashtagId) {
     const conn = await global.pool.getConnection();
 
-    req.url = req.url.replace("$$$", this.currHashtag.hashtag);
-    req.url = req.url.replace("%%%", maxHashtagId);
+    req.url = req.url.replace("$HASHTAG$", this.currHashtag.hashtag);
+    req.url = req.url.replace("$SINCEID$", maxHashtagId);
+    req.url = req.url.replace("$LANG$", this.currHashtag.lang)
 
     axios(req)
       .then((res) => {
