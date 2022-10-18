@@ -37,14 +37,14 @@ export default class {
 
     if (req.query.id === undefined) {
       randomObj = await conn.query(
-        "SELECT id, text FROM tweets ORDER BY RAND() LIMIT ?",
+        "SELECT id, text FROM view_tweets WHERE category = 'trash-tv' ORDER BY RAND() LIMIT ?",
         [Number(req.query.limit)]
       );
 
       genAndSend(randomObj);
     } else {
       randomObj = await conn.query(
-        "SELECT id, text FROM tweets WHERE id = ? LIMIT 1",
+        "SELECT id, text FROM view_tweets WHERE category = 'trash-tv' AND id = ? LIMIT 1",
         [req.query.id]
       );
 
@@ -74,6 +74,8 @@ export default class {
             "Schau dir diesen coolen zufälligen Tweet vom Deutschen Trash-TV Twitter an!\n\n"
           ) +
           result.permalink;
+
+        result.random = global.config.express.baseURL + "/v1/getRandomTrash";
 
         results.push(result);
 
