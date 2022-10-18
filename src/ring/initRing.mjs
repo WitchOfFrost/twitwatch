@@ -19,7 +19,7 @@ export default class {
     this.axios = {
       url:
         global.config.twitter.baseURL +
-        "tweets/search/recent?query=%23$HASHTAG$ -is:retweet lang:$LANG$&max_results=100&expansions=author_id&user.fields=created_at,description,entities,id,location,name,pinned_tweet_id,profile_image_url,protected,public_metrics,url,username,verified,withheld&sort_order=recency&tweet.fields=created_at&since_id=$SINCEID$",
+        "tweets/search/recent?query=%23$HASHTAG$ -is:retweet lang:$LANG$&max_results=100&expansions=author_id,attachments.media_keys&user.fields=created_at,description,entities,id,location,name,pinned_tweet_id,profile_image_url,protected,public_metrics,url,username,verified,withheld&sort_order=recency&tweet.fields=created_at&since_id=$SINCEID$&media.fields=url,type",
       method: "get",
       headers: {
         Authorization: "Bearer " + global.config.twitter.bearer,
@@ -43,9 +43,10 @@ export default class {
   async fetchHashtags() {
     const conn = await global.pool.getConnection();
 
-    let dbRes = await conn.query("SELECT * FROM hashtags WHERE ring = ?", [
-      this.id,
-    ]);
+    let dbRes = await conn.query(
+      "SELECT * FROM hashtags WHERE ring = ? AND active = 1",
+      [this.id]
+    );
 
     delete dbRes.meta;
 
@@ -77,7 +78,7 @@ export default class {
 
       req.url =
         global.config.twitter.baseURL +
-        "tweets/search/recent?query=airplane&max_results=10&sort_order=recency";
+        "tweets/search/recent?query=%23fcnuernberg&max_results=10&sort_order=recency";
 
       await axios(req)
         .then((res) => {
@@ -161,7 +162,9 @@ export default class {
         "\nHASHTAG: " +
         this.currHashtag.hashtag +
         "\nDATA : " +
-        JSON.stringify(res.data)
+        JSON.stringify(res.data) +
+        "\nRATE LIMIT: " +
+        res.headers["x-rate-limit-remaining"]
     );
 
     if (res.data.meta.result_count === 0) {
@@ -190,19 +193,57 @@ export default class {
       res.data.data.forEach(async (tweet) => {
         const conn = await global.pool.getConnection();
 
-        await conn.query(
-          `INSERT IGNORE INTO tweets SET twit_id = ?, author_id = ?, text = ?, hashtag = ?, created_at = ?`,
-          [
-            tweet.id,
-            tweet.author_id,
-            tweet.text,
-            this.currHashtag.id,
-            tweet.created_at,
-          ]
-        );
+        if (tweet.text.split(" ").indexOf("loli") < 0) {
+          await conn.query(
+            `INSERT IGNORE INTO tweets SET twit_id = ?, author_id = ?, text = ?, hashtag = ?, created_at = ?`,
+            [
+              tweet.id,
+              tweet.author_id,
+              tweet.text,
+              this.currHashtag.id,
+              tweet.created_at,
+            ]
+          );
+
+          if (
+            tweet.attachments !== undefined &&
+            tweet.attachments.media_keys !== null &&
+            tweet.attachments.media_keys !== undefined &&
+            tweet.attachments.media_keys !== []
+          ) {
+            tweet.attachments.media_keys.forEach(async (media) => {
+              await conn.query(
+                `INSERT IGNORE INTO media SET tweet_id = ?, media_key = ?`,
+                [tweet.id, media]
+              );
+            });
+          }
+        }
 
         conn.end();
       });
+      if (res.data.includes.media !== undefined) {
+        setTimeout(() => {
+          res.data.includes.media.forEach(async (media) => {
+            const conn = await global.pool.getConnection();
+
+            if (
+              media.url === undefined ||
+              media.url === null ||
+              media.url === ""
+            ) {
+              media.url = "-";
+            }
+
+            await conn.query(
+              `UPDATE media SET type = ?, url = ? WHERE media_key = ?`,
+              [media.type, media.url, media.media_key]
+            );
+
+            conn.end();
+          });
+        }, 1 * 1000);
+      }
     }
   }
 }
